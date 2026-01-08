@@ -1,4 +1,4 @@
-- 🐍 Python Expert AI Chatbot
+## 🐍 Python Expert AI Chatbot
 
 An AI-powered **Python expert chatbot** built using **FastAPI**, **Large Language Models (LLMs)**, and **Streamlit**.  
 The chatbot is trained via prompt engineering to answer Python-related questions and debug Python code interactively.
@@ -26,6 +26,3 @@ The chatbot is trained via prompt engineering to answer Python-related questions
 - **Async Support:** asyncio
 
 ---
-
-## 📂 Project Structure
- └── README.md
