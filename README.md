@@ -25,4 +25,3 @@ The chatbot is trained via prompt engineering to answer Python-related questions
 - **Language:** Python 3.9+
 - **Async Support:** asyncio
 
----
