@@ -17,7 +17,7 @@ The chatbot is trained via prompt engineering to answer Python-related questions
 
 ---
 
-- 🏗️ Tech Stack
+### 🏗️ Tech Stack
 
 - **Backend:** FastAPI
 - **Frontend/UI:** Streamlit
