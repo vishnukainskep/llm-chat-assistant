@@ -15,9 +15,6 @@ from langchain_core.tools import tool
 from langchain.agents.agent import AgentExecutor
 from langchain.agents.react.agent import create_react_agent
 
-# -------------------------------------------------
-# Basic setup
-# -------------------------------------------------
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
@@ -35,9 +32,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -------------------------------------------------
-# LLM (Azure OpenAI) — FIXED
-# -------------------------------------------------
 llm = AzureChatOpenAI(
     api_key=os.getenv("AZURE_OPENAI_API_KEY"),
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
@@ -46,9 +40,6 @@ llm = AzureChatOpenAI(
     temperature=0.2,
 )
 
-# -------------------------------------------------
-# TOOL 1: Python Expert
-# -------------------------------------------------
 @tool
 def python_expert(user_input: str) -> str:
     """Provides Python expertise, debugging, and best practices."""
@@ -73,18 +64,6 @@ User input:
     response = llm.invoke(prompt.format(user_input=user_input))
     return response.content
 
-# -------------------------------------------------
-# TOOL 2: Agent Heartbeat (DEBUG TOOL)
-# -------------------------------------------------
-@tool
-def agent_heartbeat(message: str) -> str:
-    """Confirms agent execution."""
-    logging.info("💓 agent_heartbeat tool CALLED")
-    return "🟢 AGENT TOOL INVOKED — this is NOT a plain LLM response"
-
-# -------------------------------------------------
-# TOOL 3: Tavily Search (WEB SEARCH)
-# -------------------------------------------------
 tavily_client = TavilyClient(
     api_key=os.getenv("TAVILY_API_KEY")
 )
@@ -113,9 +92,59 @@ def tavily_search(query: str) -> str:
 
     return "\n\n".join(results) if results else "No results found."
 
-# -------------------------------------------------
-# ReAct PROMPT (THIS IS THE CRITICAL FIX)
-# -------------------------------------------------
+import requests
+
+@tool
+def api_agent(endpoint: str, params: dict = {}) -> str:
+    """
+    Calls an external API and returns the response.
+    Use for structured data lookup from public APIs.
+    """
+    logging.info("🌐 api_agent tool CALLED")
+    try:
+        response = requests.get(endpoint, params=params, timeout=10)
+        response.raise_for_status()
+        return response.text 
+    except Exception as e:
+        logging.error(f"API call failed: {e}")
+        return f"API call failed: {e}"
+
+@tool
+def joke_generator(message: str = "") -> str:
+    """Fetch a random joke from the official joke API"""
+    logging.info("😂 joke_generator tool CALLED")
+    try:
+        response = requests.get(
+            "https://official-joke-api.appspot.com/random_joke", timeout=10
+        )
+        response.raise_for_status()
+        data = response.json()
+        return f"{data['setup']} ... {data['punchline']}"
+    except Exception as e:
+        logging.error(f"Failed to get joke: {e}")
+        return f"Failed to fetch a joke: {e}"
+
+@tool
+def current_time(message: str = "") -> str:
+    """Return the current time and date in proper format."""
+    logging.info("⏰ current_time tool CALLED")
+    from datetime import datetime
+    now = datetime.now()
+    return now.strftime("%Y-%m-%d %H:%M:%S")
+
+@tool
+def solve_math(expression: str) -> str:
+    """Solve a mathematical expression safely."""
+    try:
+        allowed_chars = "0123456789+-*/(). "
+        if any(c not in allowed_chars for c in expression):
+            return "Invalid characters in expression."
+        result = eval(expression)
+        return str(result)
+    except Exception as e:
+        return f"Math evaluation failed: {e}"
+
+
 prompt = PromptTemplate.from_template(
     """
 You are a ReAct agent.
@@ -129,6 +158,10 @@ Tool names:
 Rules:
 - For Python questions → use python_expert
 - For real-time, factual, or web search questions → use tavily_search
+- For current time/date → use current_time
+- For API or structured data requests → use api_agent
+- For math problems → use solve_math
+- For jokes → use joke_generator
 - For greetings / testing → use agent_heartbeat
 - NEVER answer directly without a tool
 
@@ -153,7 +186,7 @@ Question: {input}
 # -------------------------------------------------
 # Create Agent + Executor
 # -------------------------------------------------
-tools = [python_expert, agent_heartbeat, tavily_search]
+tools = [python_expert, tavily_search, api_agent, joke_generator, current_time, solve_math]
 
 agent = create_react_agent(
     llm=llm,
@@ -167,15 +200,9 @@ agent_executor = AgentExecutor(
     verbose=True,
 )
 
-# -------------------------------------------------
-# API schema
-# -------------------------------------------------
 class QueryRequest(BaseModel):
     user_input: str
 
-# -------------------------------------------------
-# API endpoint
-# -------------------------------------------------
 @app.post("/ask/stream")
 async def ask_llm_stream(request: QueryRequest):
     try:
