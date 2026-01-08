@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
-
-API_URL = "http://127.0.0.1:8000/ask"
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 st.title("🤖 Chatbot")
 
@@ -23,7 +24,7 @@ if user_input:
         st.write(user_input)
 
     response = requests.post(
-        API_URL,
+        API_URL=os.environ["BASE_URL"],
         json={"user_input": user_input}
     )
 
