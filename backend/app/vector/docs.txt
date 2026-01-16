@@ -1,0 +1,269 @@
+FAKE STORE API – API DOCUMENTATION
+Base URL: https://fakestoreapi.com
+
+Content-Type: application/json
+
+================================================================
+PRODUCTS API
+
+Get All Products
+
+Endpoint:
+GET /products
+
+Description:
+Retrieve a list of all available products.
+
+Request Example (JavaScript):
+fetch('https://fakestoreapi.com/products
+')
+.then(res => res.json())
+.then(data => console.log(data));
+
+Success Response:
+HTTP 200 OK
+
+Response Body:
+[
+{
+"id": 0,
+"title": "string",
+"price": 0.1,
+"description": "string",
+"category": "string",
+"image": "http://example.com
+"
+}
+]
+
+Add a New Product
+
+Endpoint:
+POST /products
+
+Description:
+Create a new product.
+
+Request Body (JSON):
+{
+"id": 0,
+"title": "string",
+"price": 0.1,
+"description": "string",
+"category": "string",
+"image": "http://example.com
+"
+}
+
+Field Details:
+id : integer (required)
+title : string (required)
+price : float (required)
+description : string (required)
+category : string (required)
+image : string (URL, required)
+
+Success Response:
+HTTP 201 Created
+
+Error Response:
+HTTP 400 Bad Request
+
+Get Single Product
+
+Endpoint:
+GET /products/{id}
+
+Description:
+Retrieve details of a specific product using product ID.
+
+Path Parameter:
+id : integer (required)
+
+Request Example:
+fetch('https://fakestoreapi.com/products/1
+')
+.then(res => res.json())
+.then(data => console.log(data));
+
+Success Response:
+HTTP 200 OK
+
+Response Body:
+{
+"id": 0,
+"title": "string",
+"price": 0.1,
+"description": "string",
+"category": "string",
+"image": "http://example.com
+"
+}
+
+Error Response:
+HTTP 400 Bad Request
+
+Update Product
+
+Endpoint:
+PUT /products/{id}
+
+Description:
+Update an existing product by ID.
+
+Path Parameter:
+id : integer (required)
+
+Request Body (JSON):
+{
+"id": 0,
+"title": "string",
+"price": 0.1,
+"description": "string",
+"category": "string",
+"image": "http://example.com
+"
+}
+
+Success Response:
+HTTP 200 OK
+
+Error Response:
+HTTP 400 Bad Request
+
+Delete Product
+
+Endpoint:
+DELETE /products/{id}
+
+Description:
+Delete a product by ID.
+
+Path Parameter:
+id : integer (required)
+
+Request Example:
+fetch('https://fakestoreapi.com/products/1
+', {
+method: 'DELETE'
+})
+.then(res => res.json())
+.then(data => console.log(data));
+
+Success Response:
+HTTP 200 OK
+
+Error Response:
+HTTP 400 Bad Request
+
+================================================================
+CARTS API
+
+Get All Carts
+
+Endpoint:
+GET /carts
+
+Description:
+Retrieve all available carts.
+
+Request Example:
+fetch('https://fakestoreapi.com/carts
+')
+.then(res => res.json())
+.then(data => console.log(data));
+
+Success Response:
+HTTP 200 OK
+
+Response Body:
+[
+{
+"id": 0,
+"userId": 0,
+"products": []
+}
+]
+
+Add New Cart
+
+Endpoint:
+POST /carts
+
+Description:
+Create a new cart.
+
+Request Body (JSON):
+{
+"id": 0,
+"userId": 0,
+"products": []
+}
+
+Field Details:
+id : integer (required)
+userId : integer (required)
+products : array of product objects (required)
+
+Success Response:
+HTTP 201 Created
+
+Error Response:
+HTTP 400 Bad Request
+
+Get Single Cart
+
+Endpoint:
+GET /carts/{id}
+
+Description:
+Retrieve cart details by cart ID.
+
+Path Parameter:
+id : integer (required)
+
+Request Example:
+fetch('https://fakestoreapi.com/carts/1
+')
+.then(res => res.json())
+.then(data => console.log(data));
+
+Success Response:
+HTTP 200 OK
+
+Response Body:
+{
+"id": 0,
+"userId": 0,
+"products": []
+}
+
+Error Response:
+HTTP 400 Bad Request
+
+Update Cart
+
+Endpoint:
+PUT /carts/{id}
+
+Description:
+Update an existing cart by ID.
+
+Path Parameter:
+id : integer (required)
+
+Request Body (JSON):
+{
+"id": 0,
+"userId": 0,
+"products": []
+}
+
+Success Response:
+HTTP 200 OK
+
+Error Response:
+HTTP 400 Bad Request
+
+================================================================
+END OF DOCUMENT
