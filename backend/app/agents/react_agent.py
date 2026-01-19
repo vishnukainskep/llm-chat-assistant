@@ -3,9 +3,11 @@ from app.tools.python_tool import python_expert
 from app.tools.rag_tool import rag_search
 from app.tools.api_tool import api_agent
 from app.tools.misc_tools import joke_generator, current_time, solve_math
+from langchain_classic.memory import ConversationSummaryMemory
 import json
 
-# ------------------ Tools ------------------
+# Initialize memory with the LLM for summarization
+agent_memory = ConversationSummaryMemory(llm=llm, memory_key="chat_summary")
 
 tools = [
     rag_search,
@@ -18,16 +20,20 @@ tools = [
 
 tool_map = {tool.name: tool for tool in tools}
 
-# ------------------ Prompt ------------------
-
 BASE_PROMPT = """
-You can use tools to answer questions.
-Tools: {tools}
+You are a technical assistant capable of searching documentation and executing API calls.
+CRITICAL RULE: You MUST NOT guess API endpoints or base URLs. Always use 'rag_search' first to find the correct API details from the documentation.
 
-Flow:
-1) Use rag_search to find API details.
-2) Then call api_agent with method and full URL.
-3) Show the final answer to the user.
+Tools available:
+{tools}
+
+Conversation Summary:
+{chat_summary}
+
+Mandatory Flow:
+1. If the user asks to perform an action (e.g., "show posts", "create user"), ALWAYS call 'rag_search' with a relevant query to find the API endpoint.
+2. After receiving API details (Method, URL) from 'rag_search', call 'api_agent' with the correct JSON input.
+3. Provide the final result to the user using 'Final Answer:'.
 
 Format:
 Thought: ...
@@ -39,13 +45,15 @@ Final Answer: <answer>
 
 def build_prompt(question: str, scratchpad: str) -> str:
     tool_names = ", ".join(tool_map.keys())
+    memory_vars = agent_memory.load_memory_variables({})
+    chat_summary = memory_vars.get("chat_summary", "")
+    print(chat_summary)
+    
     return (
-        BASE_PROMPT.format(tools=tool_names)
-        + f"\nQuestion: {question}\n"
+        BASE_PROMPT.format(tools=tool_names, chat_summary=chat_summary)
+        + f"\nHuman: {question}\n"
         + scratchpad
     )
-
-# ------------------ Helpers ------------------
 
 def parse_llm_output(text: str):
     data = {"thought": "", "action": "", "input": ""}
@@ -61,8 +69,6 @@ def parse_llm_output(text: str):
 
     return data
 
-# ------------------ Agent ------------------
-
 def run_agent(inputs, verbose=True, max_iterations=15):
     question = inputs["input"]
     scratchpad = ""
@@ -75,14 +81,16 @@ def run_agent(inputs, verbose=True, max_iterations=15):
             print("\nLLM Output:\n", llm_output)
 
         if "Final Answer:" in llm_output:
-            return {"output": llm_output.split("Final Answer:")[-1].strip()}
+            final_answer = llm_output.split("Final Answer:")[-1].strip()
+            agent_memory.save_context({"human_input": question}, {"output": final_answer})
+            return {"output": final_answer}
 
         parsed = parse_llm_output(llm_output)
         tool_name = parsed["action"]
         tool_input = parsed["input"]
 
         if tool_name not in tool_map:
-            scratchpad += f"\nError: Unknown tool {tool_name}\n"
+            scratchpad += f"\nError {tool_name}\n"
             continue
 
         try:
@@ -105,15 +113,14 @@ Action: {tool_name}
 Action Input: {tool_input}
 Observation: {observation}
 """
-
-    # fallback if max iterations reached
     final_prompt = (
         "You've tried multiple times. Provide a final answer:\n"
         + scratchpad
         + "\nFinal Answer:"
     )
 
-    return {"output": llm.invoke(final_prompt).content}
+    final_res = llm.invoke(final_prompt).content
+    agent_memory.save_context({"human_input": question}, {"output": final_res})
+    return {"output": final_res}
 
-# alias
 agent_executor = run_agent

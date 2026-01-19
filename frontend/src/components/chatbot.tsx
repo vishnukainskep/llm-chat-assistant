@@ -96,7 +96,7 @@ const Chatbot: React.FC = () => {
     <div className="flex flex-col h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b shadow-sm px-6 py-4">
-        <h1 className="text-xl font-bold text-gray-800">Python Expert</h1>
+        <h1 className="text-xl font-bold text-gray-800">Agent</h1>
       </div>
 
       {/* Messages */}

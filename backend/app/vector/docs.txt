@@ -1,269 +1,128 @@
-FAKE STORE API – API DOCUMENTATION
-Base URL: https://fakestoreapi.com
+Below you'll find examples using Fetch API but you can JSONPlaceholder with any other language.
 
-Content-Type: application/json
+You can copy paste the code in your browser console to quickly test JSONPlaceholder.
 
-================================================================
-PRODUCTS API
+Getting a resource
+fetch('https://jsonplaceholder.typicode.com/posts/1')
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+👇 Output
 
-Get All Products
 
-Endpoint:
-GET /products
+{
+  id: 1,
+  title: '...',
+  body: '...',
+  userId: 1
+}
+Listing all resources
+fetch('https://jsonplaceholder.typicode.com/posts')
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+👇 Output
 
-Description:
-Retrieve a list of all available products.
-
-Request Example (JavaScript):
-fetch('https://fakestoreapi.com/products
-')
-.then(res => res.json())
-.then(data => console.log(data));
-
-Success Response:
-HTTP 200 OK
-
-Response Body:
 [
-{
-"id": 0,
-"title": "string",
-"price": 0.1,
-"description": "string",
-"category": "string",
-"image": "http://example.com
-"
-}
-]
-
-Add a New Product
-
-Endpoint:
-POST /products
-
-Description:
-Create a new product.
-
-Request Body (JSON):
-{
-"id": 0,
-"title": "string",
-"price": 0.1,
-"description": "string",
-"category": "string",
-"image": "http://example.com
-"
-}
-
-Field Details:
-id : integer (required)
-title : string (required)
-price : float (required)
-description : string (required)
-category : string (required)
-image : string (URL, required)
-
-Success Response:
-HTTP 201 Created
-
-Error Response:
-HTTP 400 Bad Request
-
-Get Single Product
-
-Endpoint:
-GET /products/{id}
-
-Description:
-Retrieve details of a specific product using product ID.
-
-Path Parameter:
-id : integer (required)
-
-Request Example:
-fetch('https://fakestoreapi.com/products/1
-')
-.then(res => res.json())
-.then(data => console.log(data));
-
-Success Response:
-HTTP 200 OK
-
-Response Body:
-{
-"id": 0,
-"title": "string",
-"price": 0.1,
-"description": "string",
-"category": "string",
-"image": "http://example.com
-"
-}
-
-Error Response:
-HTTP 400 Bad Request
-
-Update Product
-
-Endpoint:
-PUT /products/{id}
-
-Description:
-Update an existing product by ID.
-
-Path Parameter:
-id : integer (required)
-
-Request Body (JSON):
-{
-"id": 0,
-"title": "string",
-"price": 0.1,
-"description": "string",
-"category": "string",
-"image": "http://example.com
-"
-}
-
-Success Response:
-HTTP 200 OK
-
-Error Response:
-HTTP 400 Bad Request
-
-Delete Product
-
-Endpoint:
-DELETE /products/{id}
-
-Description:
-Delete a product by ID.
-
-Path Parameter:
-id : integer (required)
-
-Request Example:
-fetch('https://fakestoreapi.com/products/1
-', {
-method: 'DELETE'
+  { id: 1, title: '...' /* ... */ },
+  { id: 2, title: '...' /* ... */ },
+  { id: 3, title: '...' /* ... */ },
+  /* ... */
+  { id: 100, title: '...' /* ... */ },
+];
+Creating a resource
+fetch('https://jsonplaceholder.typicode.com/posts', {
+  method: 'POST',
+  body: JSON.stringify({
+    title: 'foo',
+    body: 'bar',
+    userId: 1,
+  }),
+  headers: {
+    'Content-type': 'application/json; charset=UTF-8',
+  },
 })
-.then(res => res.json())
-.then(data => console.log(data));
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+👇 Output
 
-Success Response:
-HTTP 200 OK
-
-Error Response:
-HTTP 400 Bad Request
-
-================================================================
-CARTS API
-
-Get All Carts
-
-Endpoint:
-GET /carts
-
-Description:
-Retrieve all available carts.
-
-Request Example:
-fetch('https://fakestoreapi.com/carts
-')
-.then(res => res.json())
-.then(data => console.log(data));
-
-Success Response:
-HTTP 200 OK
-
-Response Body:
-[
 {
-"id": 0,
-"userId": 0,
-"products": []
+  id: 101,
+  title: 'foo',
+  body: 'bar',
+  userId: 1
 }
-]
+Important: resource will not be really updated on the server but it will be faked as if.
 
-Add New Cart
+Updating a resource
+fetch('https://jsonplaceholder.typicode.com/posts/1', {
+  method: 'PUT',
+  body: JSON.stringify({
+    id: 1,
+    title: 'foo',
+    body: 'bar',
+    userId: 1,
+  }),
+  headers: {
+    'Content-type': 'application/json; charset=UTF-8',
+  },
+})
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+👇 Output
 
-Endpoint:
-POST /carts
-
-Description:
-Create a new cart.
-
-Request Body (JSON):
 {
-"id": 0,
-"userId": 0,
-"products": []
+  id: 1,
+  title: 'foo',
+  body: 'bar',
+  userId: 1
 }
+Important: resource will not be really updated on the server but it will be faked as if.
 
-Field Details:
-id : integer (required)
-userId : integer (required)
-products : array of product objects (required)
+Patching a resource
+fetch('https://jsonplaceholder.typicode.com/posts/1', {
+  method: 'PATCH',
+  body: JSON.stringify({
+    title: 'foo',
+  }),
+  headers: {
+    'Content-type': 'application/json; charset=UTF-8',
+  },
+})
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+👇 Output
 
-Success Response:
-HTTP 201 Created
-
-Error Response:
-HTTP 400 Bad Request
-
-Get Single Cart
-
-Endpoint:
-GET /carts/{id}
-
-Description:
-Retrieve cart details by cart ID.
-
-Path Parameter:
-id : integer (required)
-
-Request Example:
-fetch('https://fakestoreapi.com/carts/1
-')
-.then(res => res.json())
-.then(data => console.log(data));
-
-Success Response:
-HTTP 200 OK
-
-Response Body:
 {
-"id": 0,
-"userId": 0,
-"products": []
+  id: 1,
+  title: 'foo',
+  body: '...',
+  userId: 1
 }
+Important: resource will not be really updated on the server but it will be faked as if.
 
-Error Response:
-HTTP 400 Bad Request
+Deleting a resource
+fetch('https://jsonplaceholder.typicode.com/posts/1', {
+  method: 'DELETE',
+});
+Important: resource will not be really updated on the server but it will be faked as if.
 
-Update Cart
+Filtering resources
+Basic filtering is supported through query parameters.
 
-Endpoint:
-PUT /carts/{id}
+// This will return all the posts that belong to the first user
+fetch('https://jsonplaceholder.typicode.com/posts?userId=1')
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+Listing nested resources
+One level of nested route is available.
 
-Description:
-Update an existing cart by ID.
+// This is equivalent to /comments?postId=1
+fetch('https://jsonplaceholder.typicode.com/posts/1/comments')
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+The available nested routes are:
 
-Path Parameter:
-id : integer (required)
-
-Request Body (JSON):
-{
-"id": 0,
-"userId": 0,
-"products": []
-}
-
-Success Response:
-HTTP 200 OK
-
-Error Response:
-HTTP 400 Bad Request
-
-================================================================
-END OF DOCUMENT
+/posts/1/comments
+/albums/1/photos
+/users/1/albums
+/users/1/todos
+/users/1/posts
