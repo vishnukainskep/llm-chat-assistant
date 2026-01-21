@@ -98,8 +98,6 @@ def run_agent(inputs, verbose=True, max_iterations=15):
             llm_output = response.content
         except Exception as e:
             if "content_filter" in str(e).lower():
-                # If the filter triggers on a complex multi-tool request, 
-                # try to simplify the scratchpad or return a graceful error
                 return {
                     "output": "I'm sorry, I encountered a content filter while processing your request. This often happens if personal data like phone numbers are included. I will try to save your information separately next time.", 
                     "session_id": session_id
