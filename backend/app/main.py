@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core import config
 from app.routes.ask import router as ask_router
+from app.routes.history import router as history_router
 
 app = FastAPI(title="Gemini FastAPI")
 
@@ -27,5 +28,6 @@ def health_check():
 def test_post(data: dict):
     return {"received": data}
 
-# Include the ask router
+# Include the routers
 app.include_router(ask_router)
+app.include_router(history_router)

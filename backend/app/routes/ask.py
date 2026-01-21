@@ -9,13 +9,24 @@ router = APIRouter()
 @router.post("/ask/stream")
 async def ask_llm_stream(request: QueryRequest):
     try:
-        result = agent_executor({"input": request.user_input})
+        result = agent_executor({
+            "input": request.user_input,
+            "session_id": request.session_id or "default",
+            "user_id": request.user_id or "default_user"
+        })
+
+        # Get the potentially updated session_id
+        final_session_id = result.get("session_id", request.session_id)
 
         async def token_generator():
             yield result["output"]
             await asyncio.sleep(0)
 
-        return StreamingResponse(token_generator(), media_type="text/plain")
+        return StreamingResponse(
+            token_generator(), 
+            media_type="text/plain",
+            headers={"X-Session-Id": final_session_id}
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
