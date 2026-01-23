@@ -2,68 +2,74 @@ from app.core.llm import llm
 from app.db.db import MongoDBMemory
 from langchain_classic.memory import ConversationSummaryMemory
 
+
 class MemoryFunction:
     def __init__(self, session_id: str, user_id: str):
         self.db = MongoDBMemory(session_id, user_id)
-        self.memory = ConversationSummaryMemory(llm=llm, memory_key="chat_summary")
-        
+        self.summary_memory = ConversationSummaryMemory(
+            llm=llm,
+            memory_key="chat_summary"
+        )
+
+    # ---------- Basic storage ----------
+
     def load_history(self) -> str:
-        return self.db.get_conversation()
+        return self.db.get_conversation() or ""
 
     def add_message(self, role: str, content: str):
-        current_history = self.load_history()
-        new_entry = f"{role}: {content}\n"
-        updated_history = current_history + new_entry
-        self.db.save_conversation(updated_history)
-        
-    def get_summary(self) -> str:
-        """
-        Returns a summary of the conversation using ConversationSummaryMemory.
-        """
-        full_history = self.load_history()
-        if not full_history:
-            return ""
-            
-        self.memory.clear()
-        for line in full_history.split("\n"):
-            if line.startswith("user: "):
-                self.memory.chat_memory.add_user_message(line.replace("user: ", ""))
-            elif line.startswith("assistant: "):
-                self.memory.chat_memory.add_ai_message(line.replace("assistant: ", ""))
-        
-        memory_vars = self.memory.load_memory_variables({})
-        return memory_vars.get("chat_summary", "")
+        self.db.save_conversation(
+            self.load_history() + f"{role}: {content}\n"
+        )
 
-    def get_short_term_history(self, window_size: int = 5) -> str:
-        """
-        Returns the last 'window_size' messages from the history.
-        This is the true 'short-term' memory.
-        """
-        full_history = self.load_history()
-        if not full_history:
+    # ---------- Summarization ----------
+
+    def get_summary(self) -> str:
+        history = self.load_history()
+        if not history:
             return ""
-            
-        lines = [l for l in full_history.split("\n") if l.strip()]
-        last_lines = lines[-window_size:]
-        return "\n".join(last_lines)
+
+        self.summary_memory.clear()
+
+        for line in history.splitlines():
+            if line.startswith("user:"):
+                self.summary_memory.chat_memory.add_user_message(
+                    line.replace("user:", "").strip()
+                )
+            elif line.startswith("assistant:"):
+                self.summary_memory.chat_memory.add_ai_message(
+                    line.replace("assistant:", "").strip()
+                )
+
+        return self.summary_memory.load_memory_variables({}).get("chat_summary", "")
+
+    # ---------- Short-term memory ----------
+
+    def get_recent_messages(self, limit: int = 6) -> str:
+        lines = [l for l in self.load_history().splitlines() if l.strip()]
+        return "\n".join(lines[-limit:])
+
+    # ---------- Context assembly ----------
 
     def get_full_context(self) -> str:
-        """
-        Combines summary of old messages with exact recent messages and user profile.
-        """
-        summary = self.get_summary()
-        short_term = self.get_short_term_history(window_size=6)
+        parts = []
+
         profile = self.db.get_user_profile()
-        
-        context = ""
         if profile:
-            context += f"User Profile (Long-Term Memory): {profile}\n\n"
+            parts.append(f"User Profile:\n{profile}")
+
+        summary = self.get_summary()
         if summary:
-            context += f"Previous Conversation Summary: {summary}\n\n"
-        if short_term:
-            context += f"Recent Messages:\n{short_term}"
-            
-        return context if context else "No previous history."
+            parts.append(f"Conversation Summary:\n{summary}")
+
+        recent = self.get_recent_messages()
+        if recent:
+            parts.append(f"Recent Messages:\n{recent}")
+        
+        print(parts)
+
+        return "\n\n".join(parts) if parts else "No previous history."
+
+    # ---------- Long-term profile ----------
 
     def update_profile(self, info: dict):
         self.db.update_user_profile(info)

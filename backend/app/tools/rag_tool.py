@@ -6,52 +6,55 @@ from app.vector.vectorstore import get_vectorstore
 logger = logging.getLogger(__name__)
 
 DOCS_PATH = Path(__file__).parent.parent / "vector" / "docs.txt"
-METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"]
+HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"]
+
 
 def rag_search_impl(query: str, k: int = 3) -> str:
-    content = ""
+    """
+    Search API documentation using vector search.
+    Falls back to docs.txt if vector search fails.
+    """
 
+    docs_text = ""
+
+    # ------------------ vector search ------------------ 
     try:
-        vs = get_vectorstore()
-        docs = vs.similarity_search(query, k=k)
+        vectorstore = get_vectorstore()
+        docs = vectorstore.similarity_search(query, k=k)
         if docs:
-            content = "\n".join(d.page_content for d in docs)
+            docs_text = "\n".join(doc.page_content for doc in docs)
     except Exception as e:
-        logger.warning(f"Vectorstore failed: {e}")
+        logger.warning(f"Vector search failed: {e}")
 
-    if not content:
+    if not docs_text:
         if not DOCS_PATH.exists():
             return "No API documentation found."
+        docs_text = DOCS_PATH.read_text(encoding="utf-8")
 
-        content = DOCS_PATH.read_text(encoding="utf-8")
-
+    # ------------------  Extract simple API details ------------------ 
     base_url = ""
     method = ""
     endpoint = ""
 
-    for line in content.splitlines():
-        text = line.strip()
-        low = text.lower()
-        up = text.upper()
+    for line in docs_text.splitlines():
+        line = line.strip()
 
-        if low.startswith("base url:"):
-            base_url = text.split(":", 1)[1].strip()
+        if line.lower().startswith("base url:"):
+            base_url = line.split(":", 1)[1].strip()
 
-        if low.startswith("endpoint:"):
-            endpoint = text.split(":", 1)[1].strip()
+        if line.lower().startswith("endpoint:"):
+            endpoint = line.split(":", 1)[1].strip()
 
-        for m in METHODS:
-            if m in up:
-                method = m
+        for http_method in HTTP_METHODS:
+            if http_method in line.upper():
+                method = http_method
 
-        if not endpoint and "/" in text and any(m in up for m in METHODS):
-            endpoint = text[text.find("/"):].split()[0]
-
-    result = "API Documentation Found:\n\n" + content + "\n\n"
+    # ---------------- Build response ------------------ 
+    result = f"API Documentation:\n\n{docs_text}\n"
 
     if endpoint:
         result += (
-            "Extracted API Details:\n"
+            "\nExtracted API Details:\n"
             f"Method: {method}\n"
             f"Endpoint: {endpoint}\n"
             f"Base URL: {base_url}\n"
@@ -63,6 +66,6 @@ def rag_search_impl(query: str, k: int = 3) -> str:
 
 rag_search = Tool(
     name="rag_search",
-    description="Search API docs and return method + URL",
+    description="Search API documentation and extract endpoint details",
     func=rag_search_impl,
 )
